@@ -25,14 +25,16 @@ def transcript_check(csq_list):
         csq = i.split('|')
         if csq[3] in g2t_list:
             found = True
-            return [csq[1],csq[2],csq[3],csq[5],[""]] # "HGVS", "HGNC", "RefSeq", "consequence", "other"
+            return [csq[1],csq[2],csq[3],csq[5],""] # "HGVS", "HGNC", "RefSeq", "consequence", "other"
     if found is False:
         csq_transcripts = [j.split('|')[3] for j in csq_list]
-        NM_transcripts = [k for k in csq_transcripts if k.startswith("NM_")]
+        NM = [k for k in csq_transcripts if k.startswith("NM_")]
+        NM_transcripts = ",".join(NM)
         return ["","","","",NM_transcripts]
 
-for record in vcf_reader:
-    # record = next(vcf_reader)
+for index, record in enumerate(vcf_reader):
+    print(index)
+# for record in vcf_reader:
     chrom = str(record.CHROM)
     pos = str(record.POS)
     ref = record.REF
@@ -43,7 +45,7 @@ for record in vcf_reader:
     try:
         popFreqStudies = data_result["populationFrequencies"]
         gnEall = [i["altAlleleFreq"] for i in popFreqStudies if i["study"] == "GNOMAD_EXOMES" and i["population"] == "ALL"]
-        if gnEall[0] < 1:
+        if gnEall[0] < 0.01:
             csq_list = record.INFO['CSQ']
             check = transcript_check(csq_list) # "HGVS", "HGNC", "RefSeq", "consequence", "other"
             variants = variants.append({
@@ -57,5 +59,5 @@ for record in vcf_reader:
         # print("") #data not available
 
 # print(variants.head(15))
-variants.to_csv("X111923_annot_MAF_filtered.tsv", sep='\t', encoding='utf-8', index=False)
+variants.to_csv("X111923_annot_MAF0.01_filtered.tsv", sep='\t', encoding='utf-8', index=False)
 print("Done!")
