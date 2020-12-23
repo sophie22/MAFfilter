@@ -5,7 +5,7 @@ import pandas as pd
 from CallBase_api import build_url, get_response
 
 g2t_list = []
-with open("g2tr.txt", 'r') as f:
+with open("MAFfilter/g2tr.txt", 'r') as f:
     for line in f:
         g2t_list.append(line.strip().split('\t')[1])
 # print(g2t_list[:10])
