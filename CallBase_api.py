@@ -1,7 +1,7 @@
 import json
 import requests
 
-def build_url(variant: list):
+def build_url(variant: str):
     """ Builds external url path with parameters
 
     Args:
@@ -16,8 +16,8 @@ def build_url(variant: list):
     # else:
     #     variant_list = variant_list[0]
 
-    ext_url = "%3A".join(variant.split(":"))
-    url = "http://bioinfo.hpc.cam.ac.uk/cellbase/webservices/rest/v4/hsapiens/genomic/variant/{}/annotation?assembly=grch37&include=populationFrequencies&limit=-1&skip=-1&skipCount=false&count=false&Output%20format=json&normalize=false&phased=false&useCache=false&imprecise=false&svExtraPadding=0&cnvExtraPadding=0".format(ext_url)
+    # ext_url = "%3A".join(variant.split(":"))
+    url = "http://bioinfo.hpc.cam.ac.uk/cellbase/webservices/rest/v4/hsapiens/genomic/variant/{}/annotation?assembly=grch37&include=populationFrequencies&limit=-1&skip=-1&skipCount=false&count=false&Output%20format=json&normalize=false&phased=false&useCache=false&imprecise=false&svExtraPadding=0&cnvExtraPadding=0".format(variant)
 
     return url
 
