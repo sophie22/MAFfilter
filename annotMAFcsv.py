@@ -33,7 +33,7 @@ def transcript_check(csq_list):
         return ["","","","",NM_transcripts]
 
 failed = []
-with open("X111923_failedList.txt", "w") as vf:
+with open("X111923_failedList2.txt", "w") as vf:
     for index, record in enumerate(vcf_reader):
         # while index < 2000:
         print(index)
@@ -76,6 +76,6 @@ with open("X111923_failedList.txt", "w") as vf:
             # break
 
 # print(variants.head(15))
-variants.to_csv("X111923_annot_MAFeg0.01_filtered.tsv", sep='\t', encoding='utf-8', index=False)
+variants.to_csv("X111923_annot_MAFeg0.01_filtered2.tsv", sep='\t', encoding='utf-8', index=False)
 # print(failed)
 print("Done!")
