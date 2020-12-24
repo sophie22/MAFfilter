@@ -11,7 +11,7 @@ with open("MAFfilter/g2tr.txt", 'r') as f:
 # print(g2t_list[:10])
 
 inp = sys.argv[1]
-variants = pd.DataFrame(columns=["chromosome", "position", "ref", "alt", "MAF", "HGNC", "RefSeq", "HGVS", "consequence", "other"])
+variants = pd.DataFrame(columns=["chromosome", "position", "ref", "alt", "qual", "MAF", "HGNC", "RefSeq", "HGVS", "consequence", "other"])
 vcf_reader = vcf.Reader(open(inp, 'r'))
 
 def transcript_check(csq_list):
@@ -32,50 +32,48 @@ def transcript_check(csq_list):
         NM_transcripts = ",".join(NM)
         return ["","","","",NM_transcripts]
 
-failed = []
-with open("X111923_failedList2.txt", "w") as vf:
-    for index, record in enumerate(vcf_reader):
-        # while index < 2000:
-        print(index)
-        # for record in vcf_reader:
-        chrom = str(record.CHROM)
-        pos = str(record.POS)
-        ref = record.REF
-        alt = str(record.ALT[0])
-        v = "%3A".join([chrom,pos,ref,alt])
-        url = build_url(v)
-        data_result = get_response(url)
+for index, record in enumerate(vcf_reader):
+    print(index)
+# for record in vcf_reader:
+    chrom = str(record.CHROM)
+    pos = str(record.POS)
+    ref = record.REF
+    alt = str(record.ALT[0])
+    qual = str(record.QUAL)
+    v = "%3A".join([chrom,pos,ref,alt])
+    url = build_url(v)
+    data_result = get_response(url)
+    try:
+        popFreqStudies = data_result["populationFrequencies"]
         try:
-            popFreqStudies = data_result["populationFrequencies"]
-            try:
-                gnEall = [i["altAlleleFreq"] for i in popFreqStudies if i["study"] == "GNOMAD_EXOMES" and i["population"] == "ALL"]
-                if gnEall[0] < 0.01:
-                    csq_list = record.INFO['CSQ']
-                    check = transcript_check(csq_list) # "HGVS", "HGNC", "RefSeq", "consequence", "other"
-                    variants = variants.append({
-                        "chromosome": chrom, "position": pos, "ref": ref, "alt": alt,
-                        "MAF": gnEall[0], "HGNC": check[0],
-                        "RefSeq": check[1], "HGVS": check[2], "consequence": check[3], "other": check[4]
-                    }, ignore_index=True)
-            except:
-                gnGall = [j["altAlleleFreq"] for j in popFreqStudies if j["study"] == "GNOMAD_GENOMES" and j["population"] == "ALL"]
-                if gnGall[0] < 0.01:
-                    csq_list = record.INFO['CSQ']
-                    check = transcript_check(csq_list) # "HGVS", "HGNC", "RefSeq", "consequence", "other"
-                    variants = variants.append({
-                        "chromosome": chrom, "position": pos, "ref": ref, "alt": alt,
-                        "MAF": gnGall[0], "HGNC": check[0],
-                        "RefSeq": check[1], "HGVS": check[2], "consequence": check[3], "other": check[4]
-                    }, ignore_index=True)
-
+            gnEall = [i["altAlleleFreq"] for i in popFreqStudies if i["study"] == "GNOMAD_EXOMES" and i["population"] == "ALL"]
+            if gnEall[0] < 0.01:
+                csq_list = record.INFO['CSQ']
+                check = transcript_check(csq_list) # "HGVS", "HGNC", "RefSeq", "consequence", "other"
+                variants = variants.append({
+                    "chromosome": chrom, "position": pos, "ref": ref, "alt": alt, "qual": qual,
+                    "MAF": gnEall[0], "HGNC": check[0],
+                    "RefSeq": check[1], "HGVS": check[2], "consequence": check[3], "other": check[4]
+                }, ignore_index=True)
         except:
-            variant = "-".join([chrom,pos,ref,alt])
-            vf.write(str(index) + "\t" + variant+"\n")
-            failed.append(index)
+            gnGall = [j["altAlleleFreq"] for j in popFreqStudies if j["study"] == "GNOMAD_GENOMES" and j["population"] == "ALL"]
+            if gnGall[0] < 0.01:
+                csq_list = record.INFO['CSQ']
+                check = transcript_check(csq_list) # "HGVS", "HGNC", "RefSeq", "consequence", "other"
+                variants = variants.append({
+                    "chromosome": chrom, "position": pos, "ref": ref, "alt": alt, "qual": qual,
+                    "MAF": gnGall[0], "HGNC": check[0],
+                    "RefSeq": check[1], "HGVS": check[2], "consequence": check[3], "other": check[4]
+                }, ignore_index=True)
 
-            # break
+    except:
+        csq_list = record.INFO['CSQ']
+        check = transcript_check(csq_list) # "HGVS", "HGNC", "RefSeq", "consequence", "other"
+        variants = variants.append({
+            "chromosome": chrom, "position": pos, "ref": ref, "alt": alt, "qual": qual,
+            "MAF": 0, "HGNC": check[0], "RefSeq": check[1], "HGVS": check[2],
+            "consequence": check[3], "other": check[4]
+        }, ignore_index=True)
 
-# print(variants.head(15))
-variants.to_csv("X111923_annot_MAFeg0.01_filtered2.tsv", sep='\t', encoding='utf-8', index=False)
-# print(failed)
+variants.to_csv("X111923_hom_MAFeg0.01_annot.tsv", sep='\t', encoding='utf-8', index=False)
 print("Done!")
